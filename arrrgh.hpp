@@ -546,8 +546,12 @@ namespace arrrgh
 
 						// Find this argument.
 						//
-						auto& argument = find_matching_argument( key, true /* long form */ );
-						process_argument( argument, arg, std::move( value ));
+						try {
+							auto& argument = find_matching_argument( key, true /* long form */ );
+							process_argument( argument, arg, std::move( value ));
+						} catch (const arrrgh::parser::UnknownArgument &e) {
+							m_unlabeledArguments.emplace_back( std::move( e.what() ));
+						}
 					}
 					else
 					{
@@ -576,8 +580,13 @@ namespace arrrgh
 									value = arg.substr( i + 2 );
 								}
 
-								auto& argument = find_matching_argument( std::string{ c }, false /* short form */ );
-								process_argument( argument, arg, std::move( value ));
+								try {
+									auto& argument = find_matching_argument( std::string{ c }, false /* short form */ );
+									process_argument( argument, arg, std::move( value ));
+								} catch (const arrrgh::parser::UnknownArgument &e) {
+									m_unlabeledArguments.emplace_back( std::move( e.what() ));
+								}
+
 
 								if( hasAssignment )
 								{
@@ -689,8 +698,7 @@ namespace arrrgh
 			}
 			else
 			{
-				throw UnknownArgument{ arrrgh_collect_string( "Unrecognized argument \"-" << ( longForm ? "-" : "" )
-															 << argString << "\"." ) };
+				throw UnknownArgument{ arrrgh_collect_string( ( longForm ? "--" : "-" ) << argString ) };
 			}
 		}
 
