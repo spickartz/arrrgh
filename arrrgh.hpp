@@ -14,10 +14,10 @@
 //  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 //  copies of the Software, and to permit persons to whom the Software is
 //  furnished to do so, subject to the following conditions:
-//  
+//
 //  The above copyright notice and this permission notice shall be included in
 //  all copies or substantial portions of the Software.
-//  
+//
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 //  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,14 +47,14 @@
 //
 //  			const auto& myArgument = parser.add< float >( ... );
 //
-//  	4.	In the add() function you'll indicate the long-form ("--example") and short-form ("-e") switches for this 
+//  	4.	In the add() function you'll indicate the long-form ("--example") and short-form ("-e") switches for this
 //  		argument. You can nullify one or the other if you want.
 //  		You should specify a description (the second argument).
 //  		You may also specify whether the argument is optional or required, and what the default value is (the value
 //  		to be used if the user doesn't supply it):
 //
 //  			... parser.add< float >(
-//  					"<long-form>",			// Use "example" if you want the user to say "--example", 
+//  					"<long-form>",			// Use "example" if you want the user to say "--example",
 //  											// or leave blank for no long-form.
 //  					"<description>",		// For "usage" output.
 //  					'<short-form>', 		// A character. Use '\0' for no short-form.
@@ -87,7 +87,7 @@
 //  int main( int argc, const char* argv[] )
 //  {
 //  	arrrgh::parser parser( "arrrghsample", "Parses a mix of many argument types and combinations." );
-//  	
+//
 //  	const auto& useAscii = parser.add< bool >( "ascii",
 //  											  "Use ASCII instead of that UNICORN thing or whatever it is.",
 //  											  'a',
@@ -100,7 +100,7 @@
 //  	const auto& mana = parser.add< float >( "mana", "The mana of the thing.", 'M' );
 //  	const auto& height = parser.add< int >( "height", "The height of the thing.", 'h', arrrgh::Required );
 //  	const auto& name = parser.add< std::string >( "name", "The name of the wind.", 's', arrrgh::Required );
-//  	
+//
 //  	// Unleash the hounds.
 //  	//
 //  	try
@@ -129,7 +129,7 @@
 //  		std::cout << "mana=" << mana.value() << std::endl;
 //  		std::cout << "height=" << height.value() << std::endl;
 //  		std::cout << "name=" << name.value() << std::endl;
-//  		
+//
 //  		// What about unlabeled arguments?
 //  		//
 //  		// Notice that "--weirdly-unlabeled" looks like a switch but comes through nicely as unlabeled.
@@ -143,7 +143,7 @@
 //  	{
 //  		std::cerr << "Error reading argument values: " << e.what() << std::endl;
 //  	}
-//  	
+//
 //  	return 0;
 //  }
 //
@@ -169,32 +169,32 @@ namespace arrrgh
 	}
 #define arrrgh_collect_string( expression )	\
 	arrrgh::collect_string( [&]() { std::ostringstream stream; stream << expression; return stream.str(); } )
-	
+
 #define ARRRGH_EXCEPTION( exception_class ) \
 	struct exception_class : public std::runtime_error { using runtime_error::runtime_error;  };
-	
+
 	enum Requirement
 	{
 		Optional,
 		Required
 	};
-	
+
 	template< typename ValueT >
 	struct type_traits
 	{
 		static constexpr bool always_requires_value() { return false; }
 		static constexpr const char* name();
 	};
-	
+
 	// argument classes.
 	//
 	class argument_abstract
 	{
 	public:
-		
+
 		ARRRGH_EXCEPTION( MissingValue )
 		ARRRGH_EXCEPTION( Nameless )
-		
+
 		std::string best_name() const
 		{
 			if( m_longForm.empty() )
@@ -206,17 +206,17 @@ namespace arrrgh
 				return m_longForm;
 			}
 		}
-		
+
 		bool assigned() const
 		{
 			return m_assigned;
 		}
-		
+
 		const std::string& value_string() const
 		{
 			return m_value;
 		}
-		
+
 		void clear_value()
 		{
 			m_assigned = false;
@@ -229,11 +229,11 @@ namespace arrrgh
 		//
 		virtual std::string converted_value_string() const = 0;
 		virtual bool has_default_value() const = 0;
-		
+
 	protected:
-		
+
 		bool m_assigned;
-		
+
 		explicit argument_abstract( const std::string& longForm,
 								    const std::string& explanation,
 								    char letter,
@@ -248,12 +248,12 @@ namespace arrrgh
 			assert( m_longForm.empty() || m_longForm[ 0 ] != '-' );	// Don't start your switch names with -.
 			assert( m_letter == '\0' || is_valid_short_form( m_letter ));	// Has to be valid or nothing.
 		}
-		
+
 		bool has_long_form( const std::string& longForm ) const
 		{
 			return !m_longForm.empty() && m_longForm == longForm;
 		}
-		
+
 		bool has_short_form( char shortForm ) const
 		{
 			return m_letter != '\0' && m_letter == shortForm;
@@ -263,55 +263,55 @@ namespace arrrgh
 		{
 			return m_requirement == Required;
 		}
-		
+
 		virtual bool required_value() const = 0;
 
 		void assign( const std::string& givenKey, std::string&& valueString )
 		{
 			m_assigned = true;
-			
+
 			m_value = std::move( valueString );
-			
+
 			if( m_value.empty() && required_value() )
 			{
 				throw MissingValue{ arrrgh_collect_string( "Argument required a value but received none." ) };
 			}
 		}
-								
+
 		void print( std::ostream& out ) const
 		{
 			out << "    ";
-			
+
 			bool hasLetter = m_letter != '\0';
 			if( hasLetter )
 			{
 				out << "-" << m_letter;
 			}
-			
+
 			bool hasLong = !m_longForm.empty();
-			
+
 			if( hasLetter && hasLong )
 			{
 				out << ", ";
 			}
-			
+
 			if( hasLong )
 			{
 				out << "--" << m_longForm;
 			}
-			
+
 			if( required_value() )
 			{
 				out << "=<" << value_type_name() << ">";
 			}
-			
+
 			out << "\n\t\t";
-			
+
 			if( m_requirement == Required )
 			{
 				out << "[required] ";
 			}
-			
+
 			out << m_explanation;
 		}
 
@@ -319,29 +319,29 @@ namespace arrrgh
 		{
 			return std::isalpha( c );
 		}
-		
+
 		virtual std::string value_type_name() const = 0;
-		
+
 	private:
-		
+
 		std::string m_longForm;
 		std::string m_explanation;
 		char m_letter;
 		Requirement m_requirement;
-		
+
 		std::string m_value;
-		
+
 		friend class parser;
 	};
-	
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	template< typename ValueType >
 	class argument : public argument_abstract
 	{
 	public:
 		typedef ValueType value_t;
-		
+
 		// Exception types.
 		//
 		ARRRGH_EXCEPTION( ValueConversionError )
@@ -349,12 +349,12 @@ namespace arrrgh
 		operator value_t() const
 		{
 			value_t result = m_defaultValue;
-			
+
 			if( m_assigned )
 			{
 				std::istringstream stream( value_string() );
 				stream >> std::boolalpha >> result;
-				
+
 				if( stream.fail() )
 				{
 					throw ValueConversionError{
@@ -362,14 +362,14 @@ namespace arrrgh
 						<< "' to the desired argument type." )};
 				}
 			}
-			
+
 			return result;
 		}
-		
+
 		value_t value() const { return operator value_t(); }
-		
+
 	private:
-		
+
 		value_t m_defaultValue = value_t{};
 
 		explicit argument( const std::string& longForm,
@@ -380,24 +380,24 @@ namespace arrrgh
 		:	argument_abstract( longForm, explanation, letter, required )
 		,	m_defaultValue( defaultValue )
 		{}
-		
+
 		virtual std::string value_type_name() const override
 		{
 			return type_traits< value_t >::name();
 		}
-		
+
 		virtual std::string converted_value_string() const override
 		{
 			std::ostringstream stream;
 			stream << std::boolalpha << value();
 			return stream.str();
 		}
-		
+
 		virtual bool has_default_value() const override
 		{
 			return value() == m_defaultValue;
 		}
-		
+
 		virtual bool required_value() const override
 		{
 			return type_traits< value_t >::always_requires_value();
@@ -405,13 +405,13 @@ namespace arrrgh
 
 		friend class parser;
 	};
-	
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		
+
 	class parser
 	{
 	public:
-		
+
 		// Exception classes.
 		//
 		ARRRGH_EXCEPTION( InvalidParameters )
@@ -419,7 +419,7 @@ namespace arrrgh
 		ARRRGH_EXCEPTION( FoundDoubleHyphensLeadingNowhere )
 		ARRRGH_EXCEPTION( InvalidArgumentCharacter )
 		ARRRGH_EXCEPTION( MissingRequiredArguments )
-		
+
 		explicit parser( const std::string& programName, const std::string& programDescription )
 		:	m_program( programName )
 		,	m_description( programDescription )
@@ -436,19 +436,19 @@ namespace arrrgh
 			//
 			assert( !has_long_form_argument( longForm ));
 			assert( !has_letter_argument( letter ));
-			
+
 			argument< ValueT >* arg = new argument< ValueT >{
 				longForm,
 				explanation,
 				letter,
 				required,
 				defaultValue };
-			
+
 			m_arguments.emplace_back( arg );
-			
+
 			return *arg;
 		}
-		
+
 		bool has_long_form_argument( const std::string& longForm ) const
 		{
 			return std::any_of( m_arguments.begin(), m_arguments.end(),
@@ -458,7 +458,7 @@ namespace arrrgh
 							return arg->has_long_form( longForm );
 						} );
 		}
-		
+
 		bool has_letter_argument( char letter ) const
 		{
 			return std::any_of( m_arguments.begin(), m_arguments.end(),
@@ -468,7 +468,7 @@ namespace arrrgh
 								   return arg->has_short_form( letter );
 							   } );
 		}
-		
+
 		void parse( const int argc, const char* argv[] )
 		{
 			if( argc == 0 || !argv )
@@ -484,66 +484,66 @@ namespace arrrgh
 							 "Prints this help message.",
 							 !has_letter_argument( 'h' ) ? 'h' : '\0' );
 			}
-			
+
 			auto iterHelpArg = std::find_if( m_arguments.begin(), m_arguments.end(), []( const std::unique_ptr< argument_abstract >& arg )
 										 {
 											 return arg->has_long_form( "help" );
 										 } );
 			assert( m_arguments.end() != iterHelpArg );
-			
+
 			const argument< bool >& helpArg = *static_cast< const argument< bool >* >( iterHelpArg->get() );
-			
+
 			m_programExecutionPath = argv[ 0 ];
-			
+
 			bool doneWithSwitches = false;		// When false, still looking for switches. When true, all arguments
 												// are considered "unlabeled."
-			
+
 			for( int i = 1; i < argc; ++i )
 			{
 				assert( argv[ i ] );
-				
+
 				const std::string arg{ argv[ i ] };
 				assert( !arg.empty() );
-				
+
 				// Determine which configured argument corresponds to this program argument, if any,
 				// and parse any value it might have.
-				
+
 				// Do we have a leading hyphen?
 				//
 				if( !doneWithSwitches && arg[ 0 ] == '-' )
 				{
 					// Yes we do.
-					
+
 					// Do we have two?
 					//
 					if( arg.size() > 1 && arg[ 1 ] == '-' )
 					{
 						// Yes. So we're expecting a long-form argument.
-						
+
 						// Read to the end or to the = sign.
 						//
 						const auto keyEnd = arg.find_first_of( '=' );
-						
+
 						const auto key = arg.substr( 2, keyEnd - 2 );
-						
+
 						std::string value;
-						
+
 						if( keyEnd < arg.size() )
 						{
 							value = arg.substr( keyEnd + 1 );
 						}
-						
+
 						if( key.empty() )
 						{
 							// This is either "--" or, more troublingly, "--=..."
-							
+
 							// Either way, don't look for arguments any more:
 							// anything else is "unlabeled."
 							//
 							doneWithSwitches = true;
 							continue;
 						}
-						
+
 						// Find this argument.
 						//
 						auto& argument = find_matching_argument( key, true /* long form */ );
@@ -552,19 +552,19 @@ namespace arrrgh
 					else
 					{
 						// No we don't. Just one.
-						
+
 						// Consider each following letter to be a short-form argument letter.
 						//
 						for( size_t i = 1; i < arg.size(); ++i )
 						{
 							const char c = arg[ i ];
-							
+
 							// Is this a reasonable argument character?
 							//
 							if( argument_abstract::is_valid_short_form( c ))
 							{
 								// This is a legitimate argument.
-								
+
 								// Does it have a value?
 								//
 								std::string value;
@@ -575,10 +575,10 @@ namespace arrrgh
 									//
 									value = arg.substr( i + 2 );
 								}
-								
+
 								auto& argument = find_matching_argument( std::string{ c }, false /* short form */ );
 								process_argument( argument, arg, std::move( value ));
-								
+
 								if( hasAssignment )
 								{
 									break;
@@ -599,7 +599,7 @@ namespace arrrgh
 					m_unlabeledArguments.emplace_back( std::move( arg ));
 				}
 			}
-			
+
 			// Did each of the *required* arguments get assigned?
 			//
 			if( std::any_of( m_arguments.begin(), m_arguments.end(),
@@ -611,7 +611,7 @@ namespace arrrgh
 			{
 				throw MissingRequiredArguments{ "Some required arguments were missing." };
 			}
-			
+
 			// Did our help argument get set?
 			//
 			if( helpArg.value() )
@@ -619,12 +619,12 @@ namespace arrrgh
 				show_usage();
 			}
 		}
-		
+
 		void show_usage( std::ostream& out = std::cout ) const
 		{
 			out << m_program << ": " << m_description << std::endl;
 			out << "usage: " << m_program << std::endl;
-			
+
 			for( const auto& arg : m_arguments )
 			{
 				assert( arg );
@@ -633,7 +633,7 @@ namespace arrrgh
 			}
 			out << std::endl;
 		}
-		
+
 		template< typename Function >
 		void each_argument( Function&& fn ) const
 		{
@@ -644,14 +644,14 @@ namespace arrrgh
 							  fn( *arg );
 						  } );
 		}
-		
+
 
 		template< typename Function >
 		void each_unlabeled_argument( Function&& fn ) const
 		{
 			std::for_each( m_unlabeledArguments.begin(), m_unlabeledArguments.end(), fn );
 		}
-		
+
 		void clear_values()
 		{
 			std::for_each( m_arguments.begin(), m_arguments.end(),
@@ -660,12 +660,12 @@ namespace arrrgh
 							  assert( arg );
 							  arg->clear_value();
 						  } );
-			
+
 			m_unlabeledArguments.clear();
 		}
-		
+
 	protected:
-		
+
 		argument_abstract& find_matching_argument( const std::string& argString, bool longForm )
 		{
 			auto iterFound = std::find_if( m_arguments.begin(), m_arguments.end(),
@@ -680,9 +680,9 @@ namespace arrrgh
 											  {
 												  return arg->has_short_form( argString[ 0 ] );
 											  }
-											
+
 										  } );
-			
+
 			if( iterFound != m_arguments.end() )
 			{
 				return **iterFound;
@@ -693,12 +693,12 @@ namespace arrrgh
 															 << argString << "\"." ) };
 			}
 		}
-		
+
 		void process_argument( argument_abstract& argument, const std::string& key, std::string&& value )
 		{
 			argument.assign( key, std::move( value ));
 		}
-		
+
 	private:
 
 		std::string m_program;
@@ -707,7 +707,7 @@ namespace arrrgh
 		std::vector< std::unique_ptr< argument_abstract >> m_arguments;
 		std::vector< std::string > m_unlabeledArguments;
 	};
-	
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Specializations
 	//
@@ -739,21 +739,21 @@ namespace arrrgh
 		static constexpr bool always_requires_value() { return true; }
 		static constexpr const char* name() { return "string"; }
 	};
-	
+
 	template<>
 	struct type_traits< float >
 	{
 		static constexpr bool always_requires_value() { return true; }
 		static constexpr const char* name() { return "number"; }
 	};
-	
+
 	template<>
 	struct type_traits< double >
 	{
 		static constexpr bool always_requires_value() { return true; }
 		static constexpr const char* name() { return "number"; }
 	};
-	
+
 	template<>
 	struct type_traits< int >
 	{
@@ -767,7 +767,7 @@ namespace arrrgh
 		static constexpr bool always_requires_value() { return true; }
 		static constexpr const char* name() { return "size_t"; }
 	};
-	
+
 #undef arrrgh_collect_string
 #undef ARRRGH_EXCEPTION
 
